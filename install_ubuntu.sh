@@ -15,7 +15,7 @@ fi
 
 # 检查是否为Ubuntu系统
 if ! grep -q "Ubuntu" /etc/os-release; then
-    echo "${RED}警告: 此脚本专为 Ubuntu 系统设计，其他Linux发行版可能需要调整${NC}"
+    echo "${RED}警告: 此脚本专为 Ubuntu 系统设计,其他Linux发行版可能需要调整${NC}"
 fi
 
 CHIP_TYPE=$(uname -m)
@@ -136,6 +136,19 @@ chmod +x start_chrome_ubuntu.sh
 # 创建自动启动脚本
 cat > run_trader.sh << 'EOL'
 #!/bin/bash
+
+# 自动设置 DISPLAY
+if [ -z "$DISPLAY" ] || [[ "$DISPLAY" == ":0" ]]; then
+    SOCKET=$(ls /tmp/.X11-unix/X* 2>/dev/null | head -n1)
+    if [ -n "$SOCKET" ]; then
+        DISPLAY_NUMBER=$(basename "$SOCKET" | sed 's/X//')
+        export DISPLAY=":$DISPLAY_NUMBER"
+        echo "自动设置 DISPLAY=$DISPLAY"
+    else
+        echo "未检测到 X11 socket,退出"
+        exit 1
+    fi
+fi
 
 # 打印接收到的参数，用于调试
 echo "run_trader.sh received args: $@"
