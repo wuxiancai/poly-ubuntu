@@ -111,24 +111,21 @@ fi
 # 更新PATH环境变量
 export PATH="/usr/local/bin:$PATH"
 
-# 自动检测 DISPLAY
-if [ -z "$DISPLAY" ]; then
-    # 如果 DISPLAY 没有设置，尝试寻找活跃的 X 显示
-    for i in 0 1 2 3; do
-        if [ -e "/tmp/.X11-unix/X$i" ]; then
-            export DISPLAY=:$i
-            echo -e "${YELLOW}检测到图形显示: DISPLAY=:$i${NC}"
-            break
-        fi
-    done
+# 自动判断 DISPLAY
+echo -e "${YELLOW}自动检测 DISPLAY...${NC}"
 
-    # 如果仍然没找到
-    if [ -z "$DISPLAY" ]; then
-        echo -e "${RED}未检测到可用的 X11 显示，无法启动 Chrome${NC}"
+if [ -z "$DISPLAY" ] || [[ "$DISPLAY" == ":0" ]]; then
+    SOCKET=$(ls /tmp/.X11-unix/X* 2>/dev/null | head -n1)
+    if [ -n "$SOCKET" ]; then
+        DISPLAY_NUMBER=$(basename "$SOCKET" | sed 's/X//')
+        export DISPLAY=":$DISPLAY_NUMBER"
+        echo -e "${YELLOW}使用修正后的 DISPLAY=$DISPLAY${NC}"
+    else
+        echo -e "${RED}无法检测有效 DISPLAY,请检查图形环境${NC}"
         exit 1
     fi
 else
-    echo -e "${GREEN}使用当前环境 DISPLAY=$DISPLAY${NC}"
+    echo -e "${YELLOW}使用当前环境 DISPLAY=$DISPLAY${NC}"
 fi
 
 # 启动 Chrome（调试端口）- Ubuntu版本
